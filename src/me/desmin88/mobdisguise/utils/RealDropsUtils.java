@@ -2,16 +2,14 @@ package me.desmin88.mobdisguise.utils;
 
 import java.util.Random;
 
-import me.desmin88.mobdisguise.MobDisguise;
-
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 public class RealDropsUtils {
     private static final Random r = new Random();
     
-    public static ItemStack getDrop(Player p) {
+    public static ItemStack getDrop(final Player p) {
+        /*
         switch(MobDisguise.playerMobId.get(p.getName())) {
         case 50: //Creeper
             return new ItemStack(Material.SULPHUR, r.nextInt(2));
@@ -43,15 +41,17 @@ public class RealDropsUtils {
         case 93: // Chicken
             if(r.nextInt(8) != 8)
                 return new ItemStack(Material.FEATHER, r.nextInt(2));
-            else 
+            else
                 return new ItemStack(Material.EGG, r.nextInt(1));
-        case 94: // Squid   
+        case 94: // Squid
             return new ItemStack(Material.INK_SACK, r.nextInt(2) + 1);
         case 95: // Wolf
             return null;
+            TODO
             
+        
             
-        }
+        }*/
         
         
         

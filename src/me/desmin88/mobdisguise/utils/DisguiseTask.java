@@ -7,18 +7,21 @@ import org.bukkit.entity.Player;
 
 public class DisguiseTask implements Runnable {
     public MobDisguise plugin;
+    private Player disguised;
 
-    public DisguiseTask(MobDisguise instance) {
+    public DisguiseTask(final MobDisguise instance, final Player disguised) {
         plugin = instance;
     }
 
     @Override
     public void run() {
-        for (String s : MobDisguise.disList) {
+        MobDisguise.pUtils.disguiseToAll(disguised);
+        /*
+        for (final String s : MobDisguise.disList) {
             if(Bukkit.getServer().getPlayer(s) == null) {
                 continue;
             }
-            Player temp = plugin.getServer().getPlayer(s);
+            final Player temp = plugin.getServer().getPlayer(s);
             if(MobDisguise.playerdislist.contains(temp.getName())) {
                 MobDisguise.pu.disguisep2pToAll(temp, MobDisguise.p2p.get(temp.getName()));
             }
@@ -26,5 +29,6 @@ public class DisguiseTask implements Runnable {
                 MobDisguise.pu.disguiseToAll(temp);
             }
         }
+        */
     }
 }

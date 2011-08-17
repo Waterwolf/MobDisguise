@@ -1,10 +1,13 @@
 package me.desmin88.mobdisguise.api;
 
+import me.desmin88.mobdisguise.DisguiseData;
 import me.desmin88.mobdisguise.MobDisguise;
+import me.desmin88.mobdisguise.MobDisguiseData;
+import me.desmin88.mobdisguise.PlayerDisguiseData;
 import me.desmin88.mobdisguise.api.event.DisguiseAsMobEvent;
 import me.desmin88.mobdisguise.api.event.DisguiseAsPlayerEvent;
 import me.desmin88.mobdisguise.api.event.UnDisguiseEvent;
-import me.desmin88.mobdisguise.utils.MobIdEnum;
+import me.desmin88.mobdisguise.utils.MobType;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -25,53 +28,43 @@ public class MobDisguiseAPI {
 	 * 
 	 * @return true if succesful
 	 */
-	public static boolean disguisePlayerAsPlayer(Player p, String name) {
-		if (isDisguised(p)) {
-			return false;
-		}
+	public static boolean disguisePlayerAsPlayer(final Player p, String name) {
+		if (isDisguised(p))
+            return false;
 		if (name.length() > 16) {
 			System.out.println(MobDisguise.pref + "Error, some other plugin is setting a name over 16 characters, truncating.");
-			String tmp = name.substring(0, 16);
+			final String tmp = name.substring(0, 16);
 			name = tmp;
 		}
 		/* Listener notify start */
-		DisguiseAsPlayerEvent e = new DisguiseAsPlayerEvent("DisguiseAsPlayerEvent", p, name);
+		final DisguiseAsPlayerEvent e = new DisguiseAsPlayerEvent("DisguiseAsPlayerEvent", p, name);
 		Bukkit.getServer().getPluginManager().callEvent(e);
-		if(e.isCancelled()){
-			return false;
-		}
-		/* Listener notify end */
-		MobDisguise.apiList.add(p.getName());
-		MobDisguise.disList.add(p.getName());
-		MobDisguise.playerdislist.add(p.getName());
-		MobDisguise.pu.disguisep2pToAll(p, name);
-		MobDisguise.p2p.put(p.getName(), name);
+		if(e.isCancelled())
+            return false;
+		
+		MobDisguise.disMap.put(p, new PlayerDisguiseData(name));
+		MobDisguise.pUtils.disguiseToAll(p);
+
 		return true;
 	}
-
-	/**
-	 * Undisguises a player who is disguised as another player.
-	 * @param p Player to undisguise
-	 * @param name ???
-	 * @return true if successful
-	 */
-	public static boolean undisguisePlayerAsPlayer(Player p, String name) {
-		if (!isDisguised(p)) {
-			return false;
-		}
-		/* Listener notify start */
-		UnDisguiseEvent e = new UnDisguiseEvent("UnDisguiseEvent", p, false);
-		Bukkit.getServer().getPluginManager().callEvent(e);
-		if(e.isCancelled()){
-			return false;
-		}
-		/* Listener notify end */
-		MobDisguise.apiList.remove(p.getName());
-		MobDisguise.disList.remove(p.getName());
-		MobDisguise.playerdislist.remove(p.getName());
-		MobDisguise.pu.undisguisep2pToAll(p);
-		MobDisguise.p2p.put(p.getName(), null);
-		return true;
+	
+	public static boolean undisguisePlayer(final Player p) {
+        if (!isDisguised(p))
+            return true;
+        
+        final UnDisguiseEvent e = new UnDisguiseEvent("UnDisguiseEvent", p, false);
+        Bukkit.getServer().getPluginManager().callEvent(e);
+        if(e.isCancelled())
+            return false;
+        
+        MobDisguise.pUtils.undisguiseToAll(p);
+        MobDisguise.disMap.remove(p);
+        
+        return true;
+	}
+	
+	public static DisguiseData getDisguiseData(final Player p) {
+	    return MobDisguise.disMap.get(p);
 	}
 
 	/**
@@ -82,25 +75,17 @@ public class MobDisguiseAPI {
 	 * 
 	 * @return true if successful
 	 */
-	public static boolean disguisePlayer(Player p, String mobtype) {
-		if (!MobIdEnum.map.containsKey(mobtype)) {
-			return false;
-		}
-		if (isDisguised(p)) {
-			return false;
-		}
-		/* Listener notify start */
-		DisguiseAsMobEvent e = new DisguiseAsMobEvent("DisguiseAsMobEvent", p, mobtype);
+	public static boolean disguisePlayer(final Player p, final MobType mobType) {
+		if (isDisguised(p))
+            return false;
+		
+		final DisguiseAsMobEvent e = new DisguiseAsMobEvent("DisguiseAsMobEvent", p, mobType);
 		Bukkit.getServer().getPluginManager().callEvent(e);
-		if(e.isCancelled()){
-			return false;
-		}
-		/* Listener notify end */
-		MobDisguise.apiList.add(p.getName());
-		MobDisguise.disList.add(p.getName());
-		MobDisguise.playerMobId.put(p.getName(), (byte) MobIdEnum.map.get(mobtype).intValue());
-		MobDisguise.playerEntIds.add(Integer.valueOf(p.getEntityId()));
-		MobDisguise.pu.disguiseToAll(p);
+		if(e.isCancelled())
+            return false;
+		
+		MobDisguise.disMap.put(p, new MobDisguiseData(mobType));
+		MobDisguise.pUtils.disguiseToAll(p);
 		return true;
 	}
 
@@ -112,17 +97,16 @@ public class MobDisguiseAPI {
 	 * 
 	 * @return true if successful
 	 */
-	public static boolean undisguisePlayer(Player p, String mobtype) {
-		if (isDisguised(p)) {
-			return false;
-		}
-		/* Listener notify start */
-		UnDisguiseEvent e = new UnDisguiseEvent("UnDisguiseEvent", p, true);
+	/*
+	public static boolean undisguisePlayer(final Player p, final String mobtype) {
+		if (isDisguised(p))
+            return false;
+		/* Listener notify start *
+		final UnDisguiseEvent e = new UnDisguiseEvent("UnDisguiseEvent", p, true);
 		Bukkit.getServer().getPluginManager().callEvent(e);
-		if(e.isCancelled()){
-			return false;
-		}
-		/* Listener notify end */
+		if(e.isCancelled())
+            return false;
+		/* Listener notify end *
 		MobDisguise.pu.undisguiseToAll(p);
 		MobDisguise.disList.remove(p);
 		MobDisguise.apiList.remove(p.getName());
@@ -130,7 +114,7 @@ public class MobDisguiseAPI {
 		MobDisguise.playerEntIds.remove(Integer.valueOf(p.getEntityId()));
 		return true;
 
-	}
+	}*/
 
 	/**
 	 * Checks if a player is disguised.
@@ -139,8 +123,8 @@ public class MobDisguiseAPI {
 	 * 
 	 * @return true if disguised
 	 */
-	public static boolean isDisguised(Player p) {
-		return MobDisguise.disList.contains(p.getName());
+	public static boolean isDisguised(final Player p) {
+		return MobDisguise.disMap.containsKey(p);
 	}
 
 }

@@ -1,6 +1,8 @@
 package me.desmin88.mobdisguise.listeners;
 
+import me.desmin88.mobdisguise.DisguiseData;
 import me.desmin88.mobdisguise.MobDisguise;
+import me.desmin88.mobdisguise.MobDisguiseData;
 import me.desmin88.mobdisguise.utils.RealDropsUtils;
 
 import org.bukkit.entity.Player;
@@ -12,14 +14,16 @@ import org.bukkit.event.entity.EntityTargetEvent;
 public class MDEntityListener extends EntityListener{
     @SuppressWarnings("unused")
     private final MobDisguise plugin;
-    public MDEntityListener(MobDisguise instance) {
+    public MDEntityListener(final MobDisguise instance) {
         this.plugin = instance;
     }
     
-    public void onEntityTarget(EntityTargetEvent event) {
+    @Override
+    public void onEntityTarget(final EntityTargetEvent event) {
         if(event.getTarget() instanceof Player) {
-            Player p = (Player) event.getTarget();
-            if(MobDisguise.disList.contains(p.getName()) && MobDisguise.cfg.getBoolean("MobTarget.enabled", true) && !MobDisguise.playerdislist.contains(p.getName())) {
+            final Player p = (Player) event.getTarget();
+            final DisguiseData dd = MobDisguise.disMap.get(p);
+            if(dd != null && dd instanceof MobDisguiseData && MobDisguise.cfg.getBoolean("MobTarget.enabled", true)) {
                 event.setCancelled(true);
             }
         
@@ -28,15 +32,18 @@ public class MDEntityListener extends EntityListener{
     
     
     
+    @Override
     public void onEntityDeath(final EntityDeathEvent event) {
         if(event.getEntity() instanceof Player) {
             final Player p = (Player) event.getEntity();
-            if(MobDisguise.cfg.getBoolean("RealDrops.enabled", false) && MobDisguise.disList.contains(p.getName()) && !MobDisguise.playerdislist.contains(p.getName())) {
+            final DisguiseData dd = MobDisguise.disMap.get(p);
+            if(dd != null && dd instanceof MobDisguiseData && MobDisguise.cfg.getBoolean("RealDrops.enabled", false)) {
                 event.getDrops().clear();
-                if (RealDropsUtils.getDrop(p) != null)
+                if (RealDropsUtils.getDrop(p) != null) {
                     p.getWorld().dropItemNaturally(p.getLocation(), RealDropsUtils.getDrop(p));
+                }
                 
             }
         }
-    } 
+    }
 }
